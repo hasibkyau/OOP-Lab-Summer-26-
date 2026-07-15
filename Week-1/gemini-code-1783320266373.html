@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive C++ Lab Dashboard</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+        }
+
+        /* Stopwatch Styles */
+        .timer-display {
+            font-family: monospace;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--text);
+            text-align: center;
+            margin: 10px 0;
+            transition: color 0.3s;
+        }
+
+        .timer-critical {
+            color: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 6px;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
+        .btn-secondary { background-color: var(--text-light); }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .control-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        /* Group Tracker */
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .group-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .group-card.done {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+            font-weight: bold;
+        }
+
+        /* Quiz Styles */
+        .quiz-option {
+            display: block;
+            background: #f1f5f9;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .quiz-option:hover {
+            background: #e2e8f0;
+        }
+
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: var(--success);
+            color: #065f46;
+        }
+
+        .quiz-option.wrong {
+            background-color: #fee2e2;
+            border-color: var(--danger);
+            color: #991b1b;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>C++ Lab Interactive Session</h1>
+            <p>Collaborative Code Challenge & Quick Quiz</p>
+        </div>
+        <div>
+            <span id="live-date" style="opacity: 0.8;"></span>
+        </div>
+    </header>
+
+    <!-- Left Side: Task Configuration & Student View -->
+    <main>
+        <!-- Task Control and Display -->
+        <div class="card">
+            <h2>📝 Current Lab Task</h2>
+            <div id="task-display" style="font-size: 1.15rem; line-height: 1.6; margin-bottom: 15px; padding: 12px; background: #f8fafc; border-left: 4px solid var(--primary); border-radius: 4px;">
+                Write a C++ program that takes 5 subject marks as input from the user, calculates the total sum, and prints the overall percentage.
+            </div>
+            
+            <button class="btn btn-secondary" onclick="toggleEditTask()">🔧 Edit Task Text</button>
+            
+            <div id="task-edit-panel" class="hidden" style="margin-top: 15px;">
+                <textarea id="task-input" placeholder="Type a new task description here..."></textarea>
+                <div style="margin-top: 8px;">
+                    <button class="btn btn-success" onclick="saveTask()">Save Task</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Group Submission Tracker -->
+        <div class="card">
+            <h2>👥 Group Progress Tracker</h2>
+            <p style="color: var(--text-light); font-size: 0.9rem;">Click on a group to toggle their completion status live during class.</p>
+            <div class="group-grid">
+                <div class="group-card" onclick="toggleGroup(this)">Group 1</div>
+                <div class="group-card" onclick="toggleGroup(this)">Group 2</div>
+                <div class="group-card" onclick="toggleGroup(this)">Group 3</div>
+                <div class="group-card" onclick="toggleGroup(this)">Group 4</div>
+                <div class="group-card" onclick="toggleGroup(this)">Group 5</div>
+                <div class="group-card" onclick="toggleGroup(this)">Group 6</div>
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="addGroup()">+ Add Group</button>
+                <button class="btn btn-danger" onclick="resetGroups()">Reset Trackers</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Right Side: Stopwatch & Quiz Panel -->
+    <aside>
+        <!-- Dynamic Stopwatch -->
+        <div class="card" style="text-align: center;">
+            <h2>⏱️ Activity Timer</h2>
+            <div id="timer" class="timer-display">15:00</div>
+            
+            <div class="control-group">
+                <button class="btn btn-success" id="startBtn" onclick="startTimer()">Start</button>
+                <button class="btn" style="background-color: var(--accent);" id="pauseBtn" onclick="pauseTimer()">Pause</button>
+                <button class="btn btn-danger" onclick="resetTimer()">Reset</button>
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="minutes-input" placeholder="Min" min="1" max="120" value="15">
+                <button class="btn btn-secondary" onclick="setCustomTimer()">Set Time</button>
+            </div>
+        </div>
+
+        <!-- Concept Check Quiz Box -->
+        <div class="card">
+            <h2>💡 Quick Quiz Test</h2>
+            <div id="quiz-container">
+                <p id="quiz-question" style="font-weight: 600; margin-bottom: 12px;"></p>
+                <div id="quiz-options"></div>
+                <div id="quiz-feedback" style="margin-top: 12px; font-weight: bold;"></div>
+                <button class="btn btn-secondary" id="next-quiz-btn" onclick="loadNextQuestion()" style="margin-top: 12px; width: 100%; display: none;">Next Question ➡️</button>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+    // Timer Logic
+    let countdown;
+    let totalSeconds = 900; // 15 mins default
+    let timerRunning = false;
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const timerEl = document.getElementById('timer');
+        timerEl.textContent = display;
+
+        if (totalSeconds <= 120 && totalSeconds > 0) {
+            timerEl.classList.add('timer-critical');
+        } else {
+            timerEl.classList.remove('timer-critical');
+        }
+    }
+
+    function startTimer() {
+        if (timerRunning) return;
+        timerRunning = true;
+        countdown = setInterval(() => {
+            if (totalSeconds <= 0) {
+                clearInterval(countdown);
+                timerRunning = false;
+                alert("Time's up! Wrap up your code templates.");
+                return;
+            }
+            totalSeconds--;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(countdown);
+        timerRunning = false;
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        const minInput = document.getElementById('minutes-input').value;
+        totalSeconds = (parseInt(minInput) || 15) * 60;
+        updateTimerDisplay();
+    }
+
+    function setCustomTimer() {
+        resetTimer();
+    }
+
+    // Task Customizer Logic
+    function toggleEditTask() {
+        const panel = document.getElementById('task-edit-panel');
+        panel.classList.toggle('hidden');
+        if(!panel.classList.contains('hidden')) {
+            document.getElementById('task-input').value = document.getElementById('task-display').textContent.trim();
+        }
+    }
+
+    function saveTask() {
+        const text = document.getElementById('task-input').value;
+        if(text.trim() !== "") {
+            document.getElementById('task-display').textContent = text;
+            toggleEditTask();
+        }
+    }
+
+    // Live Group Tracker Logic
+    function toggleGroup(card) {
+        card.classList.toggle('done');
+    }
+
+    function resetGroups() {
+        document.querySelectorAll('.group-card').forEach(card => card.classList.remove('done'));
+    }
+
+    function addGroup() {
+        const grid = document.querySelector('.group-grid');
+        const count = grid.children.length + 1;
+        const newGroup = document.createElement('div');
+        newGroup.className = 'group-card';
+        newGroup.textContent = `Group ${count}`;
+        newGroup.onclick = function() { toggleGroup(this); };
+        grid.appendChild(newGroup);
+    }
+
+    // Interactive Quiz Questions Data
+    const quizData = [
+        {
+            q: "Which standard header file is required to use 'cin' and 'cout' in C++?",
+            options: ["#include <stdio.h>", "#include <conio.h>", "#include <iostream>", "#include <string>"],
+            correct: 2
+        },
+        {
+            q: "What is the correct way to declare an integer variable named 'marks'?",
+            options: ["int marks;", "variable marks;", "marks = int;", "integer marks;"],
+            correct: 0
+        },
+        {
+            q: "Which operator is used to extract input using 'cin'?",
+            options: ["<<", ">>", "==", "::"],
+            correct: 1
+        }
+    ];
+
+    let currentQuizIndex = 0;
+
+    function loadQuizQuestion() {
+        const item = quizData[currentQuizIndex];
+        document.getElementById('quiz-question').textContent = item.q;
+        const optionsDiv = document.getElementById('quiz-options');
+        optionsDiv.innerHTML = '';
+        document.getElementById('quiz-feedback').textContent = '';
+        document.getElementById('next-quiz-btn').style.display = 'none';
+
+        item.options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'quiz-option';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(idx, btn);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIdx, element) {
+        const correctAnswer = quizData[currentQuizIndex].correct;
+        const feedback = document.getElementById('quiz-feedback');
+        const allOptions = document.querySelectorAll('.quiz-option');
+
+        // Disable clicks after selection
+        allOptions.forEach(opt => opt.style.pointerEvents = 'none');
+
+        if(selectedIdx === correctAnswer) {
+            element.classList.add('correct');
+            feedback.textContent = "🎉 Correct Answer!";
+            feedback.style.color = "var(--success)";
+        } else {
+            element.classList.add('wrong');
+            allOptions[correctAnswer].classList.add('correct');
+            feedback.textContent = "❌ Incorrect. Try remembering fundamental rules.";
+            feedback.style.color = "var(--danger)";
+        }
+
+        document.getElementById('next-quiz-btn').style.display = 'block';
+    }
+
+    function loadNextQuestion() {
+        currentQuizIndex = (currentQuizIndex + 1) % quizData.length;
+        loadQuizQuestion();
+    }
+
+    // Initialize Page
+    document.getElementById('live-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    updateTimerDisplay();
+    loadQuizQuestion();
+</script>
+
+</body>
+</html>
