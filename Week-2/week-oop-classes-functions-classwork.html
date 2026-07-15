@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Class & Object Vault - Interactive Game</title>
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --accent: #3b82f6;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gold: #d97706;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f1f5f9;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        header p { margin: 5px 0 0 0; color: #cbd5e1; font-style: italic; }
+
+        .game-panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .main-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .round-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: #2563eb; }
+        .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
+        .btn-gold { background-color: var(--gold); }
+        .btn-gold:hover { background-color: #b45309; }
+
+        .round-title { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .round-tag { font-size: 12px; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+
+        .display-section {
+            margin-bottom: 22px;
+        }
+
+        .display-box {
+            background-color: var(--light);
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-top: 8px;
+        }
+
+        .fact-line { font-size: 18px; margin: 4px 0; font-weight: 600; font-family: 'Courier New', monospace; color: var(--primary); white-space: pre; }
+        .rule-line { font-size: 19px; font-weight: bold; color: #b91c1c; }
+
+        .solution-box {
+            margin-top: 8px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            display: none;
+        }
+        .solution-box.show { display: block; }
+        .solution-box .sol-line { font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; color: #065f46; margin: 4px 0; white-space: pre; }
+        .solution-box .sol-note { font-size: 13.5px; color: #047857; margin-top: 8px; }
+
+        /* Timer UI */
+        .timer-container {
+            text-align: center;
+            padding: 20px;
+            background: var(--dark);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .timer-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 6px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .timer-urgent { border-color: var(--danger); color: var(--danger); animation: shake 0.5s infinite; }
+
+        .timer-btn-row { display: flex; gap: 10px; }
+
+        .time-set-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            width: 100%;
+            justify-content: center;
+        }
+        .time-set-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; }
+        .time-input {
+            width: 60px;
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 15px;
+            background: #1e293b;
+            color: white;
+        }
+        .time-input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-set {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-set:hover { background-color: #2563eb; }
+        .btn-set:disabled { background-color: #475569; cursor: not-allowed; }
+
+        .preset-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .preset-btn {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .preset-btn:hover { background: #334155; }
+        .preset-btn.active-preset { background: var(--accent); border-color: var(--accent); color: white; }
+        .preset-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Scoreboard UI */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .scoreboard-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .scoreboard-card h3 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .score-table th, .score-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .score-input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
+        .progress-dots span { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; display: inline-block; }
+        .progress-dots span.done { background: var(--success); }
+        .progress-dots span.active { background: var(--accent); }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🧩 The Class &amp; Object Vault</h1>
+        <p>Every object hides a bug, a law, or a twist — crack it before the timer hits zero!</p>
+    </header>
+
+    <div class="game-panel">
+        <!-- Main Game Interactive Dashboard -->
+        <div class="main-card">
+            <div class="round-controls">
+                <button class="btn" id="prev-btn" onclick="changeRound(-1)">◀ Previous Round</button>
+                <div>
+                    <div class="round-title" id="round-display">Round 1 / 8</div>
+                    <div class="progress-dots" id="progress-dots"></div>
+                </div>
+                <button class="btn" id="next-btn" onclick="changeRound(1)">Next Round ▶</button>
+            </div>
+
+            <div class="display-section">
+                <div class="round-tag" id="round-tag">Classify</div>
+                <h3 style="margin:0 0 0 0;">Code on the Board:</h3>
+                <div class="display-box" id="facts-box">
+                    <!-- Dynamic insertion -->
+                </div>
+            </div>
+
+            <div class="display-section">
+                <h3>Your Challenge for this Round:</h3>
+                <div class="display-box" style="border-left: 5px solid #b91c1c;">
+                    <div class="rule-line" id="rule-box"></div>
+                </div>
+            </div>
+
+            <div class="display-section" style="margin-bottom:0;">
+                <button class="btn btn-gold" id="reveal-btn" onclick="toggleSolution()">🔓 Reveal Solution</button>
+                <div class="solution-box" id="solution-box"></div>
+            </div>
+
+            <div style="margin-top: 22px; padding: 15px; background: #eff6ff; border-radius: 6px; border: 1px solid #bfdbfe;">
+                <strong>⚡ Instructions:</strong> Read the code on the board, work out the challenge as a team, and <strong>raise your hand instantly</strong> when you have it. First correct answer claims the vault point — teacher reveals the solution to verify.
+            </div>
+        </div>
+
+        <!-- Timer and Live Scoreboard Panel -->
+        <div class="sidebar">
+            <div class="timer-container">
+                <div class="timer-circle" id="timer-display">60</div>
+                <div class="timer-btn-row">
+                    <button class="btn btn-success" id="start-btn" onclick="startTimer()">Start Round</button>
+                    <button class="btn" style="background-color: var(--danger);" onclick="resetTimer()">Reset</button>
+                </div>
+
+                <div class="preset-row" id="preset-row">
+                    <button class="preset-btn" onclick="applyPreset(30)">30s</button>
+                    <button class="preset-btn active-preset" id="preset-60" onclick="applyPreset(60)">60s</button>
+                    <button class="preset-btn" onclick="applyPreset(90)">90s</button>
+                    <button class="preset-btn" onclick="applyPreset(120)">120s</button>
+                </div>
+
+                <div class="time-set-row">
+                    <span class="time-set-label">Custom</span>
+                    <input type="number" class="time-input" id="mins-input" value="1" min="0" max="59" aria-label="Minutes">
+                    <span style="color:#94a3b8; font-weight:bold;">:</span>
+                    <input type="number" class="time-input" id="secs-input" value="00" min="0" max="59" aria-label="Seconds">
+                    <button class="btn-set" id="set-time-btn" onclick="applyCustomTime()">Set</button>
+                </div>
+            </div>
+
+            <div class="scoreboard-card">
+                <h3>Vault Scores</h3>
+                <table class="score-table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th style="text-align: center;">Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body">
+                        <!-- 8 Teams will be generated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game Content Array — 8 rounds on Functions/Methods and Classes & Objects, easy -> multi-step
+    const gameRounds = [
+        {
+            tag: "Classify · Attribute or Method?",
+            facts: [
+                "private int age;",
+                "public void showAge() { System.out.println(age); }"
+            ],
+            rule: "For EACH line above, decide: is it an ATTRIBUTE or a METHOD? Justify in one short phrase.",
+            solution: [
+                "private int age;                     ->  ATTRIBUTE",
+                "public void showAge() {...}          ->  METHOD"
+            ],
+            note: "Attributes are variables that store an object's state (data). Methods are blocks of code that define an object's behavior (actions)."
+        },
+        {
+            tag: "Predict Output · Independent Objects",
+            facts: [
+                "Dog d1 = new Dog();",
+                "d1.name = \"Tom\";",
+                "Dog d2 = new Dog();",
+                "d2.name = \"Jerry\";",
+                "d2.name = \"Max\";",
+                "System.out.println(d1.name + \" and \" + d2.name);"
+            ],
+            rule: "Predict EXACTLY what gets printed to the console.",
+            solution: [
+                "Output:  Tom and Max"
+            ],
+            note: "d1 and d2 are two separate objects on the heap. Reassigning d2.name to \"Max\" has zero effect on d1.name, because each object owns its own independent copy of every attribute."
+        },
+        {
+            tag: "Constructor Detective",
+            facts: [
+                "class Book {",
+                "    String title;",
+                "    Book(String t) { title = t; }",
+                "}",
+                "// In Main:",
+                "Book b = new Book();"
+            ],
+            rule: "Will \"new Book()\" compile? YES or NO — explain why.",
+            solution: [
+                "NO  ->  Compile Error: constructor Book() is undefined",
+                "Reason: Book(String t) was written explicitly, so Java no longer auto-generates the empty default constructor."
+            ],
+            note: "Java only inserts the invisible no-argument constructor when you write ZERO constructors yourself. The moment you define any constructor, that free default one disappears."
+        },
+        {
+            tag: "Void vs Value-Returning",
+            facts: [
+                "void printSquare(int n) { System.out.println(n*n); }",
+                "int getSquare(int n) { return n*n; }",
+                "",
+                "System.out.println(getSquare(5));",
+                "System.out.println(printSquare(5));"
+            ],
+            rule: "One of the two println() calls above will NOT compile. Which one, and why?",
+            solution: [
+                "System.out.println(printSquare(5));   ->  COMPILE ERROR",
+                "Reason: printSquare is void — it returns nothing, so there is no value for println() to print."
+            ],
+            note: "Only methods with a real return type (anything other than void) can be nested inside println() or used inside an expression."
+        },
+        {
+            tag: "Overload or Error?",
+            facts: [
+                "int add(int a, int b) { return a + b; }",
+                "double add(int a, int b) { return a + b; }"
+            ],
+            rule: "Is this valid method overloading? YES or NO — justify your answer.",
+            solution: [
+                "NO  ->  Compile Error: add(int,int) is already defined in the class",
+                "Overloading needs a different parameter list (number, order, or type of parameters)."
+            ],
+            note: "Java tells overloaded methods apart by their signature — the name plus the parameter list — never by the return type alone."
+        },
+        {
+            tag: "Static vs Instance Access",
+            facts: [
+                "class Counter {",
+                "    static int totalObjects = 0;",
+                "    Counter() { totalObjects++; }",
+                "}",
+                "Counter c1 = new Counter();",
+                "Counter c2 = new Counter();"
+            ],
+            rule: "What is the CORRECT way to read how many Counter objects exist: c1.totalObjects or Counter.totalObjects? Explain.",
+            solution: [
+                "Correct style:  Counter.totalObjects   (value = 2)",
+                "c1.totalObjects also prints 2, but writing it through an object is misleading — it hints (wrongly) that each object has its own copy."
+            ],
+            note: "A static attribute belongs to the CLASS itself, shared by every object of that class, so it should be accessed through the class name."
+        },
+        {
+            tag: "Object Reference Aliasing",
+            facts: [
+                "Car c1 = new Car();",
+                "c1.speed = 40;",
+                "Car c2 = c1;",
+                "c2.speed = 100;",
+                "System.out.println(c1.speed);"
+            ],
+            rule: "Predict the output, then explain what \"Car c2 = c1;\" actually does in memory.",
+            solution: [
+                "Output:  100",
+                "\"Car c2 = c1;\" copies the HEAP ADDRESS stored in c1 into c2 — it does NOT create a new object."
+            ],
+            note: "c1 and c2 become two reference variables pointing to the exact same object. Changing speed through c2 changes the one and only object both variables refer to."
+        },
+        {
+            tag: "Debug the Class · Find All 3 Bugs",
+            facts: [
+                "public class rectangle {",
+                "    int length, width;",
+                "    public rectangle(int l, int w) { length = l, width = w; }",
+                "    public int area() { length * width; }",
+                "}"
+            ],
+            rule: "This class has THREE separate bugs. Find and fix all three.",
+            solution: [
+                "Bug 1: class name \"rectangle\" is not capitalized  ->  should be Rectangle",
+                "Bug 2: \"length = l, width = w;\" uses a comma instead of two statements  ->  length = l; width = w;",
+                "Bug 3: area() is missing the return keyword  ->  return length * width;"
+            ],
+            note: "A method needs a value-producing \"return\" whenever its return type is not void, and every statement in Java ends with its own semicolon."
+        }
+    ];
+
+    let currentRoundIndex = 0;
+    let timerInterval = null;
+    let timeLeft = 60;
+    let customDuration = 60; // seconds - persists across rounds until changed
+
+    function setTimeControlsEnabled(enabled) {
+        document.getElementById("mins-input").disabled = !enabled;
+        document.getElementById("secs-input").disabled = !enabled;
+        document.getElementById("set-time-btn").disabled = !enabled;
+        document.querySelectorAll(".preset-btn").forEach(b => b.disabled = !enabled);
+    }
+
+    function syncCustomInputsFromDuration() {
+        document.getElementById("mins-input").value = Math.floor(customDuration / 60);
+        document.getElementById("secs-input").value = String(customDuration % 60).padStart(2, "0");
+    }
+
+    function highlightPreset(seconds) {
+        document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active-preset"));
+        document.querySelectorAll(".preset-btn").forEach(b => {
+            if (b.innerText.trim() === `${seconds}s`) b.classList.add("active-preset");
+        });
+    }
+
+    function applyPreset(seconds) {
+        if (timerInterval !== null) return; // don't allow changes mid-countdown
+        customDuration = seconds;
+        syncCustomInputsFromDuration();
+        highlightPreset(seconds);
+        resetTimer();
+    }
+
+    function applyCustomTime() {
+        if (timerInterval !== null) return;
+        let mins = parseInt(document.getElementById("mins-input").value, 10);
+        let secs = parseInt(document.getElementById("secs-input").value, 10);
+        if (isNaN(mins) || mins < 0) mins = 0;
+        if (isNaN(secs) || secs < 0) secs = 0;
+        if (secs > 59) secs = 59;
+        let total = (mins * 60) + secs;
+        if (total < 5) total = 5;   // sensible floor so a round can't be set to 0
+        if (total > 3599) total = 3599; // sensible ceiling (under 1hr)
+        customDuration = total;
+        syncCustomInputsFromDuration();
+        highlightPreset(total); // clears preset highlight if it's not a standard value
+        resetTimer();
+    }
+
+    // Load Game UI Elements
+    function updateRoundUI() {
+        const round = gameRounds[currentRoundIndex];
+        document.getElementById("round-display").innerText = `Round ${currentRoundIndex + 1} / ${gameRounds.length}`;
+        document.getElementById("round-tag").innerText = round.tag;
+
+        // Load Facts (code on the board)
+        const factsBox = document.getElementById("facts-box");
+        factsBox.innerHTML = round.facts.map(f => `<div class="fact-line">${f === "" ? "&nbsp;" : f}</div>`).join('');
+
+        // Load Rule
+        document.getElementById("rule-box").innerText = round.rule;
+
+        // Reset solution panel
+        const solBox = document.getElementById("solution-box");
+        solBox.classList.remove("show");
+        solBox.innerHTML = round.solution.map(s => `<div class="sol-line">${s}</div>`).join('') +
+            `<div class="sol-note">${round.note}</div>`;
+        document.getElementById("reveal-btn").innerText = "🔓 Reveal Solution";
+
+        // Button disables
+        document.getElementById("prev-btn").disabled = currentRoundIndex === 0;
+        document.getElementById("next-btn").disabled = currentRoundIndex === gameRounds.length - 1;
+
+        // Progress dots
+        const dotsHost = document.getElementById("progress-dots");
+        dotsHost.innerHTML = "";
+        gameRounds.forEach((_, i) => {
+            const dot = document.createElement("span");
+            if (i < currentRoundIndex) dot.classList.add("done");
+            if (i === currentRoundIndex) dot.classList.add("active");
+            dotsHost.appendChild(dot);
+        });
+
+        resetTimer();
+    }
+
+    function changeRound(direction) {
+        currentRoundIndex += direction;
+        if (currentRoundIndex < 0) currentRoundIndex = 0;
+        if (currentRoundIndex >= gameRounds.length) currentRoundIndex = gameRounds.length - 1;
+        updateRoundUI();
+    }
+
+    function toggleSolution() {
+        const solBox = document.getElementById("solution-box");
+        const btn = document.getElementById("reveal-btn");
+        solBox.classList.toggle("show");
+        btn.innerText = solBox.classList.contains("show") ? "🔒 Hide Solution" : "🔓 Reveal Solution";
+    }
+
+    // Timer Logic
+    function startTimer() {
+        if (timerInterval !== null) return;
+
+        document.getElementById("start-btn").disabled = true;
+        setTimeControlsEnabled(false);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const display = document.getElementById("timer-display");
+            display.innerText = timeLeft;
+
+            if (timeLeft <= 10) {
+                display.classList.add("timer-urgent");
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                document.getElementById("start-btn").disabled = false;
+                setTimeControlsEnabled(true);
+                alert("Time's Up! Vault locked — reveal the solution to check!");
+            }
+        }, 1000);
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timeLeft = customDuration;
+        const display = document.getElementById("timer-display");
+        display.innerText = timeLeft;
+        display.classList.remove("timer-urgent");
+        document.getElementById("start-btn").disabled = false;
+        setTimeControlsEnabled(true);
+    }
+
+    // Generate Live Scoreboard for 8 Teams
+    function generateScoreboard() {
+        const tbody = document.getElementById("scoreboard-body");
+        tbody.innerHTML = "";
+        for (let i = 1; i <= 8; i++) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>Team ${i}</strong></td>
+                <td style="text-align: center;">
+                    <input type="number" class="score-input" value="0" min="0">
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Initialize Game on Window Load
+    window.onload = () => {
+        syncCustomInputsFromDuration();
+        updateRoundUI();
+        generateScoreboard();
+    };
+</script>
+
+</body>
+</html>
